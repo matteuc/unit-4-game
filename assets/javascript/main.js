@@ -1,8 +1,13 @@
-var userBaseAttack = 40;
+var userBaseAttack = 15;
 var onStage = false;
+var isGameOver = false;
+var gameSpeed = 2;
+var shakeTime = 1500;
+var shakeTimeout;
 
 var user = {
     name: "",
+    healthID: "#userHealth",
     divID: "#userPokemon",
     health: 100,
     damage: userBaseAttack,
@@ -10,6 +15,7 @@ var user = {
 
 var enemy = {
     name: "",
+    healthID: "#enemyHealth",
     divID: "#enemyPokemon",
     health: 100,
     damage: 0,
@@ -28,18 +34,19 @@ var defeatTheme = new Audio('./assets/sounds/defeat.mp3')
 var clickSound = new Audio('./assets/sounds/click.mp3');
 var faintSound = new Audio('./assets/sounds/faint.mp3');
 var hitSound = new Audio('./assets/sounds/hit.mp3');
-var lowHeathSound = new Audio('./assets/sounds/lowHealth.mp3');
+var lowHealthSound = new Audio('./assets/sounds/lowHealth.mp3');
 var levelUpSound = new Audio('./assets/sounds/levelUp.mp3');
 
 function playLoop(sound) {
     // LOWER VOLUME FOR BACKGROUND MUSIC
-    if (sound === lowHeathSound) {
+    if (sound === lowHealthSound) {
         sound.volume = 0.05;
     } else {
         sound.volume = 0.01;
     }
     sound.loop = true;
     sound.play();
+    console.log(sound);
 }
 
 function pause(sound) {
@@ -90,6 +97,15 @@ function addMessage(msg) {
 // RETURN THE HTML TO BOLD A GIVEN MESSAGE
 function bold(msg) {
     return "<strong>" + msg + "</strong>"
+}
+
+// SHAKES DIV FOR A SPECIFIED NUMBER OF TIME
+function shake(divID) {
+    clearTimeout(shakeTimeout);
+    $(divID).addClass('shake shake-constant');
+    shakeTimeout = setTimeout(function () {
+        $(divID).removeClass('shake shake-constant');
+    }, shakeTime);
 }
 
 // LOADS FOUR POKEMON AT GIVEN LOCATION (ID)
@@ -162,96 +178,100 @@ function enemyTurn() {
             var attackMessage = bold(enemy.name) + " dealt " + enemy.damage + " damage!";
             updateMessage(attackMessage);
             hitSound.play();
-            updateHealth(true, enemy.damage);
+            updateHealth(user, enemy.damage);
 
-            setTimeout(function () {
-                updateMessage("Choose your next move!");
-                $("#attackButton").removeClass("disabled");
+            if (!isGameOver) {
+                setTimeout(function () {
+                    updateMessage("Choose your next move!");
+                    // $("#attackButton").removeClass("disabled");
+                    $("#attackButton").attr("disabled", false);
 
-            }, 2500);
+
+                }, 2500 / gameSpeed);
+            }
         }
-    }, 2500)
+    }, 2500 / gameSpeed)
 
 }
 
 // UPDATES HEALTH BAR VISUALS AND CHECKS USER/ENEMY FAINT STATUS
-function updateHealth(isUser, damageDealt) {
-    var healthID;
-    var healthVal;
+function updateHealth(pokemon, damageDealt) {
+    // Determines whether or not a new Pokemon needs to be shown on stage
+    var showNewPokemon = false;
 
-    if (isUser) {
-        healthID = "#userHealth";
-        user.health = user.health - damageDealt;
-        healthVal = user.health;
+    // SHAKE CURRENT POKEMON
+    // shake(pokemon.divID);
+
+    pokemon.health = pokemon.health - damageDealt;
+    if (pokemon.health < 0) {
+        pokemon.health = 0;
+    }
+
+    if (pokemon.health > 0) {
+        var isUser = false;
+        (pokemon === user) ? isUser = true: '';
+        // if (!isUser || (isUser && enemy.health !== 0)) {
+        $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
+        $(pokemon.healthID).css("width", pokemon.health + "%");
+        updateColor(pokemon.health);
+        // }
     } else {
-        healthID = "#enemyHealth";
-        enemy.health = enemy.health - damageDealt;
-        healthVal = enemy.health;
+        faint(pokemon);
     }
 
-    if (healthVal > 0) {
-        if (!isUser || (isUser && enemy.health !== 0)) {
-            $(healthID).attr("aria-valuenow", healthVal);
-            $(healthID).css("width", healthVal + "%");
-            updateColor(healthVal);
-        }
-    } else {
-        faint(isUser);
-    }
+    function updateColor() {
+        if (pokemon.health <= 50 && pokemon.health > 20) {
+            $(pokemon.healthID).removeClass("bg-success");
+            $(pokemon.healthID).addClass("bg-warning");
 
-    function updateColor(health) {
-        if (health <= 50 && health > 20) {
-            $(healthID).removeClass("bg-success");
-            $(healthID).addClass("bg-warning");
-
-        } else if (health <= 20) {
-            $(healthID).removeClass("bg-warning");
-            $(healthID).addClass("bg-danger");
-            playLoop(lowHeathSound);
+        } else if (pokemon.health <= 20 && pokemon.health > 0) {
+            $(pokemon.healthID).removeClass("bg-warning");
+            $(pokemon.healthID).addClass("bg-danger");
+            playLoop(lowHealthSound);
         }
 
     }
 
-    function faint(isUser) {
+    function faint(pokemon) {
         // PAUSE ALL PLAYING MUSIC
-        pause(lowHeathSound);
+        pause(lowHealthSound);
         pause(battleTheme);
         // UPDATE HEALTH BAR AND PLAY SOUND
-        updateColor(0);
+        $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
+        $(pokemon.healthID).css("width", pokemon.health + "%");
+        updateColor();
         faintSound.play();
         // FADE POKEMON OUT
-        var pokemon;
-        if (isUser) {
-            pokemon = user;
-        } else {
-            pokemon = enemy;
+        if (pokemon === enemy) {
             enemiesLeft--;
+            onStage = false;
         }
 
         $(pokemon.divID).fadeOut();
+        $(pokemon.divID).remove();
+
         // UPDATE MESSAGE
         updateMessage(pokemon.name + " has fainted!");
         // OPTION TO START NEW GAME IF USER FAINTED; 
         // PROMPT NEXT ENEMY IF ENEMY FAINTED
-        if (isUser) {
-            promptLoss();
-
-        } else {
-            onStage = false;
-            promptWin()
-        }
+        (pokemon === user) ? promptLoss(): promptWin();
+        showNewPokemon = true;
 
     }
+
+    return showNewPokemon;
 
 }
 
 // PROMPTS RESTART OF GAME
 function promptRestart() {
-    addMessage("\xa0Would you like to play again?");
+    $("#attackButton").attr("disabled", false);
+    addMessage("\xa0\xa0Would you like to play again?");
     $("#attackButton").text("Play Again!");
     $("#attackButton").removeClass("btn-danger");
     $("#attackButton").addClass("btn-info");
     $("#attackButton").addClass('restartButton');
+
 }
 
 // DISPLAYS VICTORY MESSAGE IF ALL ENEMIES DEFEATED, OTHERWISE PROMPTS NEXT 
@@ -260,29 +280,43 @@ function promptWin() {
         victoryTheme.play();
         updateMessage("You have won!");
         promptRestart();
+        isGameOver = true;
     } else {
-        updateMessage(enemy.name + " has been defeated! Choose your next opponent.");
-        user.damage = user.damage * 2;
+        updateMessage(`${bold(enemy.name)} has been defeated! Choose your next opponent.`);
+        user.damage = user.damage * 1.5;
     }
 }
 
 // DISPLAYS LOSS MESSAGE AND PROMPT RESTART OF GAME
 function promptLoss() {
+    isGameOver = true;
+    updateMessage("You have been defeated!");
+    defeatTheme.play();
+    promptRestart();
 
 }
 
 function resetData(pokemon) {
     pokemon.name = "";
     pokemon.health = 100;
+    $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
+    $(pokemon.healthID).css("width", pokemon.health + "%");
+    $(pokemon.healthID).removeClass("bg-danger");
+    $(pokemon.healthID).removeClass("bg-warning");
+    $(pokemon.healthID).addClass("bg-success");
+
     if (pokemon === user) {
         pokemon.damage = userBaseAttack;
     }
+
 }
 
 
 $(document).ready(function () {
     // PLAY OPENING MUSIC
     playLoop(mainTheme);
+    // DISABLE ATTACK BUTTON
+    $("#attackButton").attr("disabled", true);
     // STARTS GAME ON CLICK
     $("#startButton").on("click", function () {
         // VALIDATE USER CHOSEN POKEMON
@@ -327,24 +361,27 @@ $(document).ready(function () {
             onStage = true;
             updateMessage("Your opponent is " + bold(enemy.name) + "!");
             // ENABLE ATTACK BUTTON
-            $("#attackButton").removeClass("disabled");
+            $("#attackButton").attr("disabled", false);
+
         }
 
     })
 
     // ATTACKS ENEMY IF ON STAGE
     $(document).on('click', '#attackButton', function () {
-        if (onStage) {
+        if (onStage && !isGameOver) {
             // PLAY ATTACK SOUND AND SHOW MESSAGE
-            var attackMessage = bold(user.name) + " dealt " + user.damage + " damage!";
+            var attackMessage = `${bold(user.name)} dealt ${user.damage} damage!`;
             updateMessage(attackMessage);
             hitSound.play();
-            // UPDATE ENEMY HEALTH BAR
-            updateHealth(false, user.damage);
+            // UPDATE ENEMY HEALTH BAR (AND DETERMINE WHETHER 
+            // OR NOT A NEW POKEMON IS NOW ON THE STAGE)
+            var isNewPokemon = updateHealth(enemy, user.damage);
             // DISABLE ATTACK BUTTON
-            $("#attackButton").addClass("disabled");
+            // $("#attackButton").addClass("disabled");
+            (!isGameOver) ? $("#attackButton").attr("disabled", true): '';
             // COMMENCE ENEMY TURN
-            enemyTurn();
+            (!isNewPokemon) ? enemyTurn(): '';
         }
 
     })
