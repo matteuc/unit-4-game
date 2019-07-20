@@ -1,23 +1,30 @@
+var userBaseAttack = 40;
+var onStage = false;
+
 var user = {
     name: "",
+    divID: "#userPokemon",
     health: 100,
-    damage: 10,
+    damage: userBaseAttack,
 }
 
 var enemy = {
     name: "",
+    divID: "#enemyPokemon",
     health: 100,
-    damage: 10,
+    damage: 0,
     damageMax: 15,
     damageMin: 10
 }
 
+var enemiesLeft = 4;
 var localPokedex = [];
 
 //MUSIC & SOUNDS
 var mainTheme = new Audio('./assets/sounds/opening.mp3');
 var battleTheme = new Audio('./assets/sounds/battle.mp3');
 var victoryTheme = new Audio('./assets/sounds/victory.mp3');
+var defeatTheme = new Audio('./assets/sounds/defeat.mp3')
 var clickSound = new Audio('./assets/sounds/click.mp3');
 var faintSound = new Audio('./assets/sounds/faint.mp3');
 var hitSound = new Audio('./assets/sounds/hit.mp3');
@@ -72,6 +79,11 @@ function startGame() {
 // UPDATE GAME MESSAGE
 function updateMessage(msg) {
     $("#gameMessage").empty();
+    $("#gameMessage").append($("<p>").html(msg));
+}
+
+// ADD TO GAME MESSAGE
+function addMessage(msg) {
     $("#gameMessage").append($("<p>").html(msg));
 }
 
@@ -146,19 +158,19 @@ function presentPokemon(isUser, pokemonName) {
 
 function enemyTurn() {
     setTimeout(function () {
-        var attackMessage = bold(enemy.name) + " dealt " + enemy.damage + " damage!";
-        updateMessage(attackMessage);
-        hitSound.play();
-        updateHealth(true, enemy.damage);
+        if (enemy.health > 0) {
+            var attackMessage = bold(enemy.name) + " dealt " + enemy.damage + " damage!";
+            updateMessage(attackMessage);
+            hitSound.play();
+            updateHealth(true, enemy.damage);
 
-        setTimeout(function () {
-            updateMessage("Choose your next move!");
-            $("#attackButton").removeClass("disabled");
+            setTimeout(function () {
+                updateMessage("Choose your next move!");
+                $("#attackButton").removeClass("disabled");
 
-        }, 2500);
+            }, 2500);
+        }
     }, 2500)
-
-
 
 }
 
@@ -178,12 +190,13 @@ function updateHealth(isUser, damageDealt) {
     }
 
     if (healthVal > 0) {
-        $(healthID).attr("aria-valuenow", healthVal);
-        $(healthID).css("width", healthVal + "%");
-        updateColor(healthVal);
+        if (!isUser || (isUser && enemy.health !== 0)) {
+            $(healthID).attr("aria-valuenow", healthVal);
+            $(healthID).css("width", healthVal + "%");
+            updateColor(healthVal);
+        }
     } else {
         faint(isUser);
-        updateColor(0);
     }
 
     function updateColor(health) {
@@ -199,22 +212,75 @@ function updateHealth(isUser, damageDealt) {
 
     }
 
+    function faint(isUser) {
+        // PAUSE ALL PLAYING MUSIC
+        pause(lowHeathSound);
+        pause(battleTheme);
+        // UPDATE HEALTH BAR AND PLAY SOUND
+        updateColor(0);
+        faintSound.play();
+        // FADE POKEMON OUT
+        var pokemon;
+        if (isUser) {
+            pokemon = user;
+        } else {
+            pokemon = enemy;
+            enemiesLeft--;
+        }
+
+        $(pokemon.divID).fadeOut();
+        // UPDATE MESSAGE
+        updateMessage(pokemon.name + " has fainted!");
+        // OPTION TO START NEW GAME IF USER FAINTED; 
+        // PROMPT NEXT ENEMY IF ENEMY FAINTED
+        if (isUser) {
+            promptLoss();
+
+        } else {
+            onStage = false;
+            promptWin()
+        }
+
+    }
+
 }
 
-function faint(isUser) {
-    pause(lowHeathSound);
-    pause(battleTheme);
-    faintSound.play();
-    $("#userPokemon").fadeOut();
-    updateMessage();
-    // OPTION TO START NEW GAME
-    promptRestart();
+// PROMPTS RESTART OF GAME
+function promptRestart() {
+    addMessage("\xa0Would you like to play again?");
+    $("#attackButton").text("Play Again!");
+    $("#attackButton").removeClass("btn-danger");
+    $("#attackButton").addClass("btn-info");
+    $("#attackButton").addClass('restartButton');
+}
 
+// DISPLAYS VICTORY MESSAGE IF ALL ENEMIES DEFEATED, OTHERWISE PROMPTS NEXT 
+function promptWin() {
+    if (enemiesLeft === 0) {
+        victoryTheme.play();
+        updateMessage("You have won!");
+        promptRestart();
+    } else {
+        updateMessage(enemy.name + " has been defeated! Choose your next opponent.");
+        user.damage = user.damage * 2;
+    }
+}
+
+// DISPLAYS LOSS MESSAGE AND PROMPT RESTART OF GAME
+function promptLoss() {
 
 }
+
+function resetData(pokemon) {
+    pokemon.name = "";
+    pokemon.health = 100;
+    if (pokemon === user) {
+        pokemon.damage = userBaseAttack;
+    }
+}
+
 
 $(document).ready(function () {
-    var onStage = false;
     // PLAY OPENING MUSIC
     playLoop(mainTheme);
     // STARTS GAME ON CLICK
@@ -250,6 +316,7 @@ $(document).ready(function () {
     // ADDS ENEMY TO CORRECT POSITION IN BATTLE ARENA
     $(document).on('click', '.enemy', function () {
         if (!onStage) {
+            resetData(enemy);
             // SHOW POKEMON ON STAGE
             enemy.name = $(this).find("img").attr("alt")
             presentPokemon(false, enemy.name);
@@ -280,5 +347,10 @@ $(document).ready(function () {
             enemyTurn();
         }
 
+    })
+
+    // RESTARTS GAME (RELOADS PAGE)
+    $(document).on('click', '.restartButton', function () {
+        document.location.reload()
     })
 })
