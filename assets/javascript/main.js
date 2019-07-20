@@ -26,7 +26,11 @@ var levelUpSound = new Audio('./assets/sounds/levelUp.mp3');
 
 function playLoop(sound) {
     // LOWER VOLUME FOR BACKGROUND MUSIC
-    sound.volume = 0.01;
+    if (sound === lowHeathSound) {
+        sound.volume = 0.05;
+    } else {
+        sound.volume = 0.01;
+    }
     sound.loop = true;
     sound.play();
 }
@@ -170,7 +174,7 @@ function updateHealth(isUser, damageDealt) {
     } else {
         healthID = "#enemyHealth";
         enemy.health = enemy.health - damageDealt;
-        healthVal = user.health;
+        healthVal = enemy.health;
     }
 
     if (healthVal > 0) {
@@ -179,27 +183,35 @@ function updateHealth(isUser, damageDealt) {
         updateColor(healthVal);
     } else {
         faint(isUser);
+        updateColor(0);
     }
 
     function updateColor(health) {
-        if (health <= 50) {
+        if (health <= 50 && health > 20) {
             $(healthID).removeClass("bg-success");
             $(healthID).addClass("bg-warning");
-
 
         } else if (health <= 20) {
             $(healthID).removeClass("bg-warning");
             $(healthID).addClass("bg-danger");
+            playLoop(lowHeathSound);
         }
 
     }
 
+}
 
+function faint(isUser) {
+    pause(lowHeathSound);
+    pause(battleTheme);
+    faintSound.play();
+    $("#userPokemon").fadeOut();
+    updateMessage();
+    // OPTION TO START NEW GAME
+    promptRestart();
 
 
 }
-
-function faint() {}
 
 $(document).ready(function () {
     var onStage = false;
