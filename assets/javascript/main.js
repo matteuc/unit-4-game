@@ -1,7 +1,7 @@
 var userBaseAttack = 25;
 var onStage = false;
 var isGameOver = false;
-var gameSpeed = 2;
+var gameSpeed = 1.5;
 var shakeTime = 1000;
 var shakeTimeout;
 
