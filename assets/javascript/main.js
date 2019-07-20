@@ -2,7 +2,7 @@ var userBaseAttack = 25;
 var onStage = false;
 var isGameOver = false;
 var gameSpeed = 2;
-var shakeTime = 1500;
+var shakeTime = 1000;
 var shakeTimeout;
 
 var user = {
@@ -40,9 +40,9 @@ var levelUpSound = new Audio('./assets/sounds/levelUp.mp3');
 function playLoop(sound) {
     // LOWER VOLUME FOR BACKGROUND MUSIC
     if (sound === lowHealthSound) {
-        sound.volume = 0.05;
+        sound.volume = 0.1;
     } else {
-        sound.volume = 0.01;
+        sound.volume = 0.05;
     }
     sound.loop = true;
     sound.play();
@@ -101,10 +101,10 @@ function bold(msg) {
 
 // SHAKES DIV FOR A SPECIFIED NUMBER OF TIME
 function shake(divID) {
-    clearTimeout(shakeTimeout);
     $(divID).addClass('shake shake-constant');
     shakeTimeout = setTimeout(function () {
-        $(divID).removeClass('shake shake-constant');
+        $(divID).removeClass('shake');
+        $(divID).removeClass('shake-constant');
     }, shakeTime);
 }
 
@@ -200,7 +200,7 @@ function updateHealth(pokemon, damageDealt) {
     var showNewPokemon = false;
 
     // SHAKE CURRENT POKEMON
-    // shake(pokemon.divID);
+    shake(pokemon.divID);
 
     pokemon.health = pokemon.health - damageDealt;
     if (pokemon.health < 0) {
@@ -283,7 +283,7 @@ function promptWin() {
         isGameOver = true;
     } else {
         updateMessage(`${bold(enemy.name)} has been defeated! Choose your next opponent.`);
-        user.damage = user.damage * 1.5;
+        user.damage = Math.floor(user.damage * 1.5);
     }
 }
 
@@ -378,7 +378,6 @@ $(document).ready(function () {
             // OR NOT A NEW POKEMON IS NOW ON THE STAGE)
             var isNewPokemon = updateHealth(enemy, user.damage);
             // DISABLE ATTACK BUTTON
-            // $("#attackButton").addClass("disabled");
             (!isGameOver) ? $("#attackButton").attr("disabled", true): '';
             // COMMENCE ENEMY TURN
             (!isNewPokemon) ? enemyTurn(): '';
