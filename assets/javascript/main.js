@@ -25,6 +25,7 @@ var enemy = {
 
 var enemiesLeft = 4;
 var localPokedex = [];
+var lowerCasePokedex;
 
 //MUSIC & SOUNDS
 var mainTheme = new Audio('./assets/sounds/opening.mp3');
@@ -143,9 +144,8 @@ function getPokemonImage(pokemonName, isFront) {
 function isPokemon(pokemonName) {
     var formatName = pokemonName.toLowerCase();
     // Capitalize first letter of input
-    formatName = formatName.charAt(0).toUpperCase() + formatName.slice(1);
 
-    if (localPokedex.indexOf(formatName) === -1) {
+    if (lowerCasePokedex.indexOf(formatName) === -1) {
         $('#selectorMessage').text("Please choose a valid Pokemon (up to Generation IV)!");
         return false;
     }
@@ -320,12 +320,17 @@ $(document).ready(function () {
     // FUNCTION TO AUTOCOMPLETE POKEMON CHOOSER
     $(function () {
         //RETRIEVE JSON DATA FROM API
-        $.getJSON("https://api.myjson.com/bins/kbveh",
+        $.getJSON("https://api.myjson.com/bins/tmjbh",
             function (pokedexData) {
                 // FOR EACH POKEMON IN DATA, PUSH TO LOCAL POKEDEX
                 $.each(pokedexData, function (id, pokemon) {
                     localPokedex.push(pokemon);
                 })
+
+                lowerCasePokedex = localPokedex.slice();
+                for(var i = 0; i < lowerCasePokedex.length; i++) {
+                    lowerCasePokedex[i] = lowerCasePokedex[i].toLowerCase();
+                }
             })
         // USE JQUERY UI TO AUTOCOMPLETE FORM 
         $("#heroSelector").autocomplete({
