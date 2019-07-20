@@ -1,4 +1,4 @@
-var userBaseAttack = 15;
+var userBaseAttack = 100;
 var onStage = false;
 var isGameOver = false;
 var gameSpeed = 2;
@@ -120,7 +120,7 @@ function loadPokemonAtId(id, type) {
             var randomDamage = Math.ceil(Math.random() * enemy.damageMax + enemy.damageMin);
             pokemonElement.addClass("enemy");
             pokemonElement.data("dmg", randomDamage);
-            pokemonElement.attr("href", '#');
+            pokemonElement.attr("href", '#/');
             pokemonElement.attr("title", pokemonName + " (Damage: " + randomDamage + ")");
         }
 
@@ -235,7 +235,6 @@ function updateHealth(pokemon, damageDealt) {
     function faint(pokemon) {
         // PAUSE ALL PLAYING MUSIC
         pause(lowHealthSound);
-        pause(battleTheme);
         // UPDATE HEALTH BAR AND PLAY SOUND
         $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
         $(pokemon.healthID).css("width", pokemon.health + "%");
@@ -277,7 +276,8 @@ function promptRestart() {
 // DISPLAYS VICTORY MESSAGE IF ALL ENEMIES DEFEATED, OTHERWISE PROMPTS NEXT 
 function promptWin() {
     if (enemiesLeft === 0) {
-        victoryTheme.play();
+        pause(battleTheme);
+        playLoop(victoryTheme);
         updateMessage("You have won!");
         promptRestart();
         isGameOver = true;
