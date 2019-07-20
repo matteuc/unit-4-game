@@ -68,7 +68,7 @@ function startGame() {
     $("#gameMenu").css("display", "none");
 
     // SHOW GAME DISPLAY
-    $("#gameView").css("display", "block");
+    $("#gameView").fadeIn();
 
     // PREVENT OVERFLOW OF GAME DISPLAY
     $("#gameDisplay").css("height", "auto");
