@@ -1,4 +1,4 @@
-var userBaseAttack = 100;
+var userBaseAttack = 25;
 var onStage = false;
 var isGameOver = false;
 var gameSpeed = 2;
@@ -311,10 +311,10 @@ function resetData(pokemon) {
 
 }
 
+// PLAY OPENING MUSIC
+playLoop(mainTheme);
 
 $(document).ready(function () {
-    // PLAY OPENING MUSIC
-    playLoop(mainTheme);
     // DISABLE ATTACK BUTTON
     $("#attackButton").attr("disabled", true);
     // STARTS GAME ON CLICK
