@@ -46,7 +46,6 @@ function playLoop(sound) {
     }
     sound.loop = true;
     sound.play();
-    console.log(sound);
 }
 
 function pause(sound) {
@@ -79,7 +78,6 @@ function startGame() {
 
     // LOAD ENEMIES ONTO DOM
     loadPokemonAtId("enemiesDisplay", 'enemy');
-    //RESET GLOBAL VARIABLES
 
 }
 
@@ -142,7 +140,6 @@ function getPokemonImage(pokemonName, isFront) {
 }
 
 // Determines if the entered pokemon exists
-// ACCOUNT FOR POKEMON NAMES THAT HAVE TWO CAPITAL LETTERS (and Farfetch'd)
 function isPokemon(pokemonName) {
     var formatName = pokemonName.toLowerCase();
     // Capitalize first letter of input
@@ -183,7 +180,6 @@ function enemyTurn() {
             if (!isGameOver) {
                 setTimeout(function () {
                     updateMessage("Choose your next move!");
-                    // $("#attackButton").removeClass("disabled");
                     $("#attackButton").attr("disabled", false);
 
 
@@ -208,13 +204,10 @@ function updateHealth(pokemon, damageDealt) {
     }
 
     if (pokemon.health > 0) {
-        var isUser = false;
-        (pokemon === user) ? isUser = true: '';
-        // if (!isUser || (isUser && enemy.health !== 0)) {
         $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
         $(pokemon.healthID).css("width", pokemon.health + "%");
         updateColor(pokemon.health);
-        // }
+        
     } else {
         faint(pokemon);
     }
@@ -390,3 +383,6 @@ $(document).ready(function () {
         document.location.reload()
     })
 })
+
+// ACCOUNT FOR POKEMON NAMES THAT HAVE TWO CAPITAL LETTERS (and Farfetch'd)
+//account for farfetch'd
