@@ -24,20 +24,22 @@
     <!-- jQuery UI CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- W3 CSS -->
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <!-- Main CSS  -->
     <link rel="stylesheet" href="assets/css/style.css">
     </link>
     <title>Pokemon Battle Royale!</title>
 </head>
 
-<body style="padding:50px; background-color: white">
+<body>
     <div id="mainGame" class="container-fluid">
         <div class="row justify-content-center">
             <img id="gameLogo" src="assets/images/pokemon-logo.png">
         </div>
-        <div id="gameDisplay" class="container justify-content-center" style="height: 50vh; padding:20px">
+        <div id="gameDisplay" class="container justify-content-center">
             <div id="gameMenu" class="row justify-content-center">
-                <div class="mt-5 col-xs-12 ">
+                <div class="mt-1 col-xs-12">
                     <label id="selectorMessage" for="heroSelector">Choose your Pokemon!</label>
                     <br>
                     <input id="heroSelector">
@@ -49,7 +51,7 @@
 
                 </div>
 
-                <div class="container">
+                <div class="container" style="width: 60vw;">
                     <div id="greeterPokemon" class="row mt-5 justify-content-center">
                     </div>
                 </div>
@@ -57,11 +59,30 @@
 
             <div id="gameView" class="container justify-content-center">
                 <div id="battleArena" class="row justify-content-center">
+                    <div id="enemyInfo">
+                        <div id="enemyName">???</div>
+                        <div class="progress healthBar">
+                            <div id="enemyHealth" class="progress-bar bg-success" role="progressbar" aria-valuenow="100"
+                                aria-valuemin="0" aria-valuemax="100" style="width:100%">HP</div>
+                        </div>
+                    </div>
+                    <div id="userInfo">
+                        <div id="userName"></div>
+                        <div class="progress healthBar">
+                            <div id="userHealth" class="progress-bar bg-success" role="progressbar" aria-valuenow="100"
+                                aria-valuemin="0" aria-valuemax="100" style="width:100%">HP</div>
+                        </div>
+                    </div>
 
                 </div>
-                <div id="enemies" class="row">
-
+                <div id="gameMessage" class="row p-1"></div>
+                <div id="gameControls" class="row mt-2">
+                    <!-- <div class="col-sm-12 p-1 text-center"> -->
+                        <button id="attackButton" type="button"
+                            class="col-sm-12 btn btn-danger disabled">Attack</button>
+                    <!-- </div> -->
                 </div>
+                <div id="enemiesDisplay" class="row mt-2"></div>
             </div>
         </div>
 
