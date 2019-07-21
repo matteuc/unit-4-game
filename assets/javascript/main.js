@@ -156,7 +156,7 @@ function isPokemon(pokemonName) {
     // Capitalize first letter of input
 
     if (lowerCasePokedex.indexOf(formatName) === -1) {
-        $('#selectorMessage').text("Please choose a valid Pokemon (up to Generation IV)!");
+        $('#selectorMessage').text("Please choose a valid Pokemon (up to Generation V)!");
         return false;
     }
 
@@ -328,7 +328,7 @@ $(document).ready(function () {
     // FUNCTION TO AUTOCOMPLETE POKEMON CHOOSER
     $(function () {
         //RETRIEVE JSON DATA FROM API
-        $.getJSON("https://api.myjson.com/bins/tmjbh",
+        $.getJSON("https://api.myjson.com/bins/11su85",
             function (pokedexData) {
                 // FOR EACH POKEMON IN DATA, PUSH TO LOCAL POKEDEX
                 $.each(pokedexData, function (id, pokemon) {
