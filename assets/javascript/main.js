@@ -1,3 +1,5 @@
+// GLOBAL DATA
+
 var userBaseAttack = 25;
 var onStage = false;
 var isGameOver = false;
@@ -7,20 +9,25 @@ var shakeTimeout;
 
 var user = {
     name: "",
+    nameDiv: "#userName",
     healthID: "#userHealth",
     divID: "#userPokemon",
     health: 100,
     damage: userBaseAttack,
+    isFacing: false
 }
 
 var enemy = {
     name: "",
+    nameDiv: "#enemyName",
     healthID: "#enemyHealth",
     divID: "#enemyPokemon",
     health: 100,
     damage: 0,
     damageMax: 15,
-    damageMin: 10
+    damageMin: 5,
+    isFacing: true
+
 }
 
 var enemiesLeft = 4;
@@ -37,6 +44,8 @@ var faintSound = new Audio('./assets/sounds/faint.mp3');
 var hitSound = new Audio('./assets/sounds/hit.mp3');
 var lowHealthSound = new Audio('./assets/sounds/lowHealth.mp3');
 var levelUpSound = new Audio('./assets/sounds/levelUp.mp3');
+
+// HELPER FUNCTIONS
 
 function playLoop(sound) {
     // LOWER VOLUME FOR BACKGROUND MUSIC
@@ -74,8 +83,9 @@ function startGame() {
     $("#gameDisplay").css("height", "auto");
 
     // APPEND CHOSEN POKEMON PICTURE AND NAME
-    presentPokemon(true, user.name);
-    updateMessage("You have chosen " + bold(user.name) + "!\xa0\xa0Please select a contestant to battle.")
+    presentPokemon(user);
+    updateMessage(`You have chosen ${bold(user.name)}!\xa0\xa0Select a contestant to battle
+    (hover to view info).`)
 
     // LOAD ENEMIES ONTO DOM
     loadPokemonAtId("enemiesDisplay", 'enemy');
@@ -95,7 +105,7 @@ function addMessage(msg) {
 
 // RETURN THE HTML TO BOLD A GIVEN MESSAGE
 function bold(msg) {
-    return "<strong>" + msg + "</strong>"
+    return `<strong>${msg}</strong>`
 }
 
 // SHAKES DIV FOR A SPECIFIED NUMBER OF TIME
@@ -113,17 +123,18 @@ function loadPokemonAtId(id, type) {
         var randomID = Math.floor(Math.random() * localPokedex.length);
         var pokemonName = localPokedex[randomID];
         var pokemonSrc = getPokemonImage(pokemonName, true);
-        var pokemonElement = $('<a title="' + pokemonName + '"><img class="col-xs-3" src="' + pokemonSrc + '" alt="' + pokemonName + '"></a>');
+        var pokemonElement = $(`<a title="${pokemonName}"><img class="col-xs-3" 
+        src="${pokemonSrc}" alt="${pokemonName}"></a>`);
 
         if (type === "enemy") {
-            var randomDamage = Math.ceil(Math.random() * enemy.damageMax + enemy.damageMin);
+            var randomDamage = Math.ceil(Math.random() * (enemy.damageMax - enemy.damageMin) + enemy.damageMin);
             pokemonElement.addClass("enemy");
             pokemonElement.data("dmg", randomDamage);
             pokemonElement.attr("href", '#/');
-            pokemonElement.attr("title", pokemonName + " (Damage: " + randomDamage + ")");
+            pokemonElement.attr("title", `${pokemonName} (Damage: ${randomDamage})`);
         }
 
-        $('#' + id).append(pokemonElement);
+        $(`#${id}`).append(pokemonElement);
     }
 
 }
@@ -131,12 +142,11 @@ function loadPokemonAtId(id, type) {
 // Retrieves pokemon images from https://pokemondb.net/
 function getPokemonImage(pokemonName, isFront) {
     if (isFront) {
-        return "https://img.pokemondb.net/sprites/black-white/normal/" +
-            pokemonName.toLowerCase() + ".png";
+        return `https://img.pokemondb.net/sprites/black-white/normal/${pokemonName.toLowerCase()}.png`;
     }
 
-    return "https://img.pokemondb.net/sprites/black-white/back-normal/" +
-        pokemonName.toLowerCase() + ".png";
+    return `https://img.pokemondb.net/sprites/black-white/back-normal/${pokemonName.toLowerCase()}.png`;
+
 
 }
 
@@ -150,29 +160,23 @@ function isPokemon(pokemonName) {
         return false;
     }
 
-    user.name = formatName;
+    user.name = pokemonName;
     return true;
 }
 
 // PUTS GIVEN POKEMON ON STAGE
-function presentPokemon(isUser, pokemonName) {
+function presentPokemon(pokemon) {
     var pokemonElement;
-    if (isUser) {
-        pokemonElement = $("<img id='userPokemon' class='justify-content-center w3-animate-opacity'>");
-        $('#battleArena').append(pokemonElement.attr("src", getPokemonImage(pokemonName, false)));
-        $('#userName').text(pokemonName);
-    } else {
-        pokemonElement = $("<img id='enemyPokemon' class='justify-content-center w3-animate-opacity'>");
-        $('#battleArena').append(pokemonElement.attr("src", getPokemonImage(pokemonName, true)));
-        $('#enemyName').text(pokemonName);
+    pokemonElement = $(`<img id=${(pokemon.divID).split('#')[1]} class='justify-content-center w3-animate-opacity'>`);
+    $('#battleArena').append(pokemonElement.attr("src", getPokemonImage(pokemon.name, pokemon.isFacing)));
+    $(pokemon.nameDiv).text(pokemon.name);
 
-    }
 }
 
 function enemyTurn() {
     setTimeout(function () {
         if (enemy.health > 0) {
-            var attackMessage = bold(enemy.name) + " dealt " + enemy.damage + " damage!";
+            var attackMessage = `${bold(enemy.name)} dealt ${enemy.damage} damage!`;
             updateMessage(attackMessage);
             hitSound.play();
             updateHealth(user, enemy.damage);
@@ -205,9 +209,9 @@ function updateHealth(pokemon, damageDealt) {
 
     if (pokemon.health > 0) {
         $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
-        $(pokemon.healthID).css("width", pokemon.health + "%");
+        $(pokemon.healthID).css("width", `${pokemon.health}%`);
         updateColor(pokemon.health);
-        
+
     } else {
         faint(pokemon);
     }
@@ -230,7 +234,7 @@ function updateHealth(pokemon, damageDealt) {
         pause(lowHealthSound);
         // UPDATE HEALTH BAR AND PLAY SOUND
         $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
-        $(pokemon.healthID).css("width", pokemon.health + "%");
+        $(pokemon.healthID).css("width", `${pokemon.health}%`);
         updateColor();
         faintSound.play();
         // FADE POKEMON OUT
@@ -243,7 +247,7 @@ function updateHealth(pokemon, damageDealt) {
         $(pokemon.divID).remove();
 
         // UPDATE MESSAGE
-        updateMessage(pokemon.name + " has fainted!");
+        updateMessage(`${pokemon.name} has fainted!`);
         // OPTION TO START NEW GAME IF USER FAINTED; 
         // PROMPT NEXT ENEMY IF ENEMY FAINTED
         (pokemon === user) ? promptLoss(): promptWin();
@@ -275,7 +279,7 @@ function promptWin() {
         promptRestart();
         isGameOver = true;
     } else {
-        updateMessage(`${bold(enemy.name)} has been defeated! Choose your next opponent.`);
+        updateMessage(`${bold(enemy.name)} has been defeated!  Please choose your next opponent.`);
         user.damage = Math.floor(user.damage * 1.5);
     }
 }
@@ -284,16 +288,18 @@ function promptWin() {
 function promptLoss() {
     isGameOver = true;
     updateMessage("You have been defeated!");
-    defeatTheme.play();
+    pause(battleTheme);
+    playLoop(defeatTheme);
     promptRestart();
 
 }
 
+// RESET DATA OF SPECIFIED POKEMON
 function resetData(pokemon) {
     pokemon.name = "";
     pokemon.health = 100;
     $(pokemon.healthID).attr("aria-valuenow", pokemon.health);
-    $(pokemon.healthID).css("width", pokemon.health + "%");
+    $(pokemon.healthID).css("width", `${pokemon.health}%`);
     $(pokemon.healthID).removeClass("bg-danger");
     $(pokemon.healthID).removeClass("bg-warning");
     $(pokemon.healthID).addClass("bg-success");
@@ -303,6 +309,8 @@ function resetData(pokemon) {
     }
 
 }
+
+// MAIN FUNCTIONS
 
 // PLAY OPENING MUSIC
 playLoop(mainTheme);
@@ -327,8 +335,10 @@ $(document).ready(function () {
                     localPokedex.push(pokemon);
                 })
 
+                // COPIES ARRAY AND TRANSFORMS TO LOWERCASE TO ACCOUNT
+                // FOR POKEMON WITH TWO WORD NAMES
                 lowerCasePokedex = localPokedex.slice();
-                for(var i = 0; i < lowerCasePokedex.length; i++) {
+                for (var i = 0; i < lowerCasePokedex.length; i++) {
                     lowerCasePokedex[i] = lowerCasePokedex[i].toLowerCase();
                 }
             })
@@ -351,13 +361,13 @@ $(document).ready(function () {
             resetData(enemy);
             // SHOW POKEMON ON STAGE
             enemy.name = $(this).find("img").attr("alt")
-            presentPokemon(false, enemy.name);
+            presentPokemon(enemy);
             // GET ENEMY POKEMON ATTACK POWER
             enemy.damage = $(this).data("dmg");
             // HIDE POKEMON FROM BENCH
             $(this).css("display", "none");
             onStage = true;
-            updateMessage("Your opponent is " + bold(enemy.name) + "!");
+            updateMessage(`Your opponent is ${bold(enemy.name)}!`);
             // ENABLE ATTACK BUTTON
             $("#attackButton").attr("disabled", false);
 
@@ -388,6 +398,3 @@ $(document).ready(function () {
         document.location.reload()
     })
 })
-
-// ACCOUNT FOR POKEMON NAMES THAT HAVE TWO CAPITAL LETTERS (and Farfetch'd)
-//account for farfetch'd
